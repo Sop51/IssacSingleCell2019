@@ -4,6 +4,8 @@ library(purrr)
 library(dplyr)
 library(tidyverse)
 library(ggplot2)
+library(edgeR)
+library(ComplexHeatmap)
 
 # load in the matrisome gene set
 matrisome_all <- read.csv("/Users/sm2949/Desktop/Dr_Matrisome_Masterlist_Nauroy et al_2017.xlsx - Dr_Matrisome_Masterlist.csv")
@@ -244,10 +246,125 @@ ggplot(long_nes_all, aes(x = Timepoint, y = NES, color = CellType, group = CellT
 leading_edges <- read_csv('/Users/sm2949/Desktop/2019SingleCell_leadingEdgeGenes.csv')
 
 # extract the genes for each timepoint
-leading_0dpa_genes <- leading_edges$'0dpa'
-leading_1dpa_genes <- leading_edges$'1dpa'
-leading_2dpa_genes <- leading_edges$'2dpa'
-leading_3dpa_genes <- leading_edges$'3dpa'
-leading_4dpa_genes <- leading_edges$'4dpa'
-leading_7dpa_genes <- leading_edges$'7dpa'
+leading_0dpa_genes <- unlist(leading_edges[leading_edges$`cell type` == "hepatocytes", '0dpa'])
+leading_1dpa_genes <- unlist(leading_edges[leading_edges$`cell type` == "hepatocytes", '1dpa'])
+leading_2dpa_genes <- unlist(leading_edges[leading_edges$`cell type` == "hepatocytes", '2dpa'])
+leading_3dpa_genes <- unlist(leading_edges[leading_edges$`cell type` == "hepatocytes", '3dpa'])
+leading_4dpa_genes <- unlist(leading_edges[leading_edges$`cell type` == "hepatocytes", '4dpa'])
+leading_7dpa_genes <- unlist(leading_edges[leading_edges$`cell type` == "hepatocytes", '7dpa'])
+
+# combine into one list 
+all_leading_genes_hep <- c(leading_0dpa_genes, 
+                    leading_1dpa_genes, 
+                    leading_2dpa_genes, 
+                    leading_3dpa_genes, 
+                    leading_4dpa_genes, 
+                    leading_7dpa_genes)
+
+# create a copy of the seurat object
+zf_heat <- zf
+
+# aggregate expression per timepoint per cell type
+cts <- AggregateExpression(zf, 
+                           group.by = c("cell.type.9.short", "timepoint"),
+                           assays = 'RNA',
+                           slot = 'counts',
+                           return.seurat = FALSE)
+
+# convert to a data frame
+cts <- as.data.frame(cts$RNA)
+
+# transpose the data frame
+cts.t <- t(cts)
+
+# get values where to split
+splitrows <- gsub('_.*', '', rownames(cts.t))
+
+# split the data frame
+cts.split <- split.data.frame(cts.t,
+                              f = factor(splitrows))
+
+# fix the columns and transpose
+cts.split.modified <- lapply(cts.split, function(x){
+  # for each element remove the cell type name
+  rownames(x) <- gsub('.*_(.*)', '\\1', rownames(x))
+  t(x)
+})
+
+# normalize the data and generate for hepatocytes
+# get the counts matrix
+counts_hep <- cts.split.modified$Hep
+
+# generate sample level metadata
+colData <- data.frame(timepoint = colnames(counts_hep))
+
+# set the condition to a factor vairable
+groups <- as.factor(colData$timepoint)
+
+# create the DGElist object
+y <- DGEList(counts=counts_hep,group=groups)
+# normalize by library size
+y <- normLibSizes(y)
+# calculate the normalization factors
+y <- calcNormFactors(y)
+normalized_hep <- cpm(y)
+normalized_hep <- as.data.frame(normalized_hep)
+
+# subset the count matrix for only the wanted genes
+leading_edge_hep <- normalized_hep[rownames(normalized_hep) %in% all_leading_genes_hep, ]
+leading_edge_hep <- as.data.frame(leading_edge_hep)
+leading_edge_hep <- leading_edge_hep[, !colnames(leading_edge_hep) %in% c("mock")]
+leading_edge_hep <- as.matrix(leading_edge_hep)
+
+# Create a metadata frame to hold timepoints and KEGG categories for the genes
+gene_metadata <- leading_edges %>% 
+  filter(`cell type` == "hepatocytes") %>%
+  select('0dpa', '1dpa', '2dpa', '3dpa', '4dpa', '7dpa', 'category') %>%
+  gather(key = "timepoint", value = "gene", -category) %>%
+  filter(gene %in% rownames(leading_edge_hep)) %>%
+  distinct(gene, category, .keep_all = TRUE)
+
+# Create a new data frame that matches the order of genes in `leading_edge_hep`
+ordered_gene_metadata <- gene_metadata %>%
+  filter(gene %in% rownames(leading_edge_hep)) %>%
+  arrange(match(gene, rownames(leading_edge_hep))) %>%
+  select(gene, category)
+
+# Set the gene column as the row names
+ordered_gene_metadata <- as.data.frame(ordered_gene_metadata)
+rownames(ordered_gene_metadata) <- ordered_gene_metadata$gene
+ordered_gene_metadata <- ordered_gene_metadata %>% select(-gene)
+
+annotation_colors <- list(
+  category = c("collagens" = "#f4f1de", 
+               "ecm affiliated proteins" = "#eab69f",
+               "ecm glycoproteins" = "#e07a5f", 
+               "ecm regulators" = "#3d405b",
+               "proteoglycans" = "#81b29a", 
+               "secreted factors" = "#f2cc8f")
+)
+
+ha <- HeatmapAnnotation(category = ordered_gene_metadata$category,
+                        which = 'row',
+                        col = annotation_colors)
+
+timepoint_split <- gene_metadata %>%
+  filter(gene %in% rownames(leading_edge_hep)) %>%
+  arrange(match(gene, rownames(leading_edge_hep))) %>%
+  pull(timepoint)
+
+# Z-score normalize the matrix by row (genes)
+leading_edge_hep_zscored <- t(scale(t(leading_edge_hep)))
+
+# Generate heatmap with annotations
+Heatmap(leading_edge_hep_zscored, right_annotation = ha, 
+        cluster_columns = FALSE, cluster_rows = TRUE,
+        rect_gp = gpar(col = "white", lwd = 2),
+        column_title = "Leading Edge Matrisome Genes Per Pathway In Hepatocytes",
+        heatmap_legend_param = list(
+          title = gt_render("<span style='color:black'>**Expression**</span>"), 
+          at = c(-2, 0, 2), 
+          labels = gt_render(c("Low Expression", "No Change", "High Expression"))
+        ))
+
 
