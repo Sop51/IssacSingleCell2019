@@ -245,6 +245,7 @@ ggplot(long_nes_all, aes(x = Timepoint, y = NES, color = CellType, group = CellT
 # read in the file containing leading gene edge info for each cell type
 leading_edges <- read_csv('/Users/sm2949/Desktop/2019SingleCell_leadingEdgeGenes.csv')
 
+# NOTE: THIS SECTION IS FOR HEPATOCYTES 
 # extract the genes for each timepoint
 leading_0dpa_genes <- unlist(leading_edges[leading_edges$`cell type` == "hepatocytes", '0dpa'])
 leading_1dpa_genes <- unlist(leading_edges[leading_edges$`cell type` == "hepatocytes", '1dpa'])
@@ -367,4 +368,194 @@ Heatmap(leading_edge_hep_zscored, right_annotation = ha,
           labels = gt_render(c("Low Expression", "No Change", "High Expression"))
         ))
 
+
+# NOTE: THIS SECTION IS FOR ENDOTHELIAL CELLS
+# extract the genes for each timepoint
+leading_0dpa_genes <- unlist(leading_edges[leading_edges$`cell type` == "endothelial", '0dpa'])
+leading_1dpa_genes <- unlist(leading_edges[leading_edges$`cell type` == "endothelial", '1dpa'])
+leading_2dpa_genes <- unlist(leading_edges[leading_edges$`cell type` == "endothelial", '2dpa'])
+leading_3dpa_genes <- unlist(leading_edges[leading_edges$`cell type` == "endothelial", '3dpa'])
+leading_4dpa_genes <- unlist(leading_edges[leading_edges$`cell type` == "endothelial", '4dpa'])
+leading_7dpa_genes <- unlist(leading_edges[leading_edges$`cell type` == "endothelial", '7dpa'])
+
+# combine into one list 
+all_leading_genes_end <- c(leading_0dpa_genes, 
+                           leading_1dpa_genes, 
+                           leading_2dpa_genes, 
+                           leading_3dpa_genes, 
+                           leading_4dpa_genes, 
+                           leading_7dpa_genes)
+
+# normalize the data and generate for endothelial cells
+# get the counts matrix
+counts_end <- cts.split.modified$End
+
+# generate sample level metadata
+colData <- data.frame(timepoint = colnames(counts_end))
+
+# set the condition to a factor vairable
+groups <- as.factor(colData$timepoint)
+
+# create the DGElist object
+y <- DGEList(counts=counts_end,group=groups)
+# normalize by library size
+y <- normLibSizes(y)
+# calculate the normalization factors
+y <- calcNormFactors(y)
+normalized_end <- cpm(y)
+normalized_end <- as.data.frame(normalized_end)
+
+# subset the count matrix for only the wanted genes
+leading_edge_end <- normalized_end[rownames(normalized_end) %in% all_leading_genes_end, ]
+leading_edge_end <- as.data.frame(leading_edge_end)
+leading_edge_end <- leading_edge_end[, !colnames(leading_edge_end) %in% c("mock")]
+leading_edge_end <- as.matrix(leading_edge_end)
+# remove genes where all expression values are 0 across all columns
+leading_edge_end <- leading_edge_end[rowSums(leading_edge_end != 0) > 0, ]
+
+# Create a metadata frame to hold timepoints and KEGG categories for the genes
+gene_metadata <- leading_edges %>% 
+  filter(`cell type` == "endothelial") %>%
+  select('0dpa', '1dpa', '2dpa', '3dpa', '4dpa', '7dpa', 'category') %>%
+  gather(key = "timepoint", value = "gene", -category) %>%
+  filter(gene %in% rownames(leading_edge_end)) %>%
+  distinct(gene, category, .keep_all = TRUE)
+
+# Create a new data frame that matches the order of genes
+ordered_gene_metadata <- gene_metadata %>%
+  filter(gene %in% rownames(leading_edge_end)) %>%
+  arrange(match(gene, rownames(leading_edge_end))) %>%
+  select(gene, category)
+
+# Set the gene column as the row names
+ordered_gene_metadata <- as.data.frame(ordered_gene_metadata)
+rownames(ordered_gene_metadata) <- ordered_gene_metadata$gene
+ordered_gene_metadata <- ordered_gene_metadata %>% select(-gene)
+
+annotation_colors <- list(
+  category = c("collagens" = "#f4f1de", 
+               "ecm affiliated proteins" = "#eab69f",
+               "ecm glycoproteins" = "#e07a5f", 
+               "ecm regulators" = "#3d405b",
+               "proteoglycans" = "#81b29a", 
+               "secreted factors" = "#f2cc8f")
+)
+
+ha <- HeatmapAnnotation(category = ordered_gene_metadata$category,
+                        which = 'row',
+                        col = annotation_colors)
+
+timepoint_split <- gene_metadata %>%
+  filter(gene %in% rownames(leading_edge_end)) %>%
+  arrange(match(gene, rownames(leading_edge_end))) %>%
+  pull(timepoint)
+
+# Z-score normalize the matrix by row (genes)
+leading_edge_end_zscored <- t(scale(t(leading_edge_end)))
+
+# Generate heatmap with annotations
+Heatmap(leading_edge_end_zscored, right_annotation = ha, 
+        cluster_columns = FALSE, cluster_rows = TRUE,
+        rect_gp = gpar(col = "white", lwd = 2),
+        column_title = "Leading Edge Matrisome Genes Per Pathway In Endothelial Cells",
+        heatmap_legend_param = list(
+          title = gt_render("<span style='color:black'>**Expression**</span>"), 
+          at = c(-2, 0, 2), 
+          labels = gt_render(c("Low Expression", "No Change", "High Expression"))
+        ))
+
+# NOTE: THIS SECTION IS FOR HSCs
+# extract the genes for each timepoint
+leading_0dpa_genes <- unlist(leading_edges[leading_edges$`cell type` == "HSC", '0dpa'])
+leading_1dpa_genes <- unlist(leading_edges[leading_edges$`cell type` == "HSC", '1dpa'])
+leading_2dpa_genes <- unlist(leading_edges[leading_edges$`cell type` == "HSC", '2dpa'])
+leading_3dpa_genes <- unlist(leading_edges[leading_edges$`cell type` == "HSC", '3dpa'])
+leading_4dpa_genes <- unlist(leading_edges[leading_edges$`cell type` == "HSC", '4dpa'])
+leading_7dpa_genes <- unlist(leading_edges[leading_edges$`cell type` == "HSC", '7dpa'])
+
+# combine into one list 
+all_leading_genes_hsc <- c(leading_0dpa_genes, 
+                           leading_1dpa_genes, 
+                           leading_2dpa_genes, 
+                           leading_3dpa_genes, 
+                           leading_4dpa_genes, 
+                           leading_7dpa_genes)
+
+# normalize the data and generate for endothelial cells
+# get the counts matrix
+counts_hsc <- cts.split.modified$HSC
+
+# generate sample level metadata
+colData <- data.frame(timepoint = colnames(counts_hsc))
+
+# set the condition to a factor vairable
+groups <- as.factor(colData$timepoint)
+
+# create the DGElist object
+y <- DGEList(counts=counts_hsc,group=groups)
+# normalize by library size
+y <- normLibSizes(y)
+# calculate the normalization factors
+y <- calcNormFactors(y)
+normalized_hsc <- cpm(y)
+normalized_hsc <- as.data.frame(normalized_hsc)
+
+# subset the count matrix for only the wanted genes
+leading_edge_hsc <- normalized_hsc[rownames(normalized_hsc) %in% all_leading_genes_hsc, ]
+leading_edge_hsc <- as.data.frame(leading_edge_hsc)
+leading_edge_hsc <- leading_edge_hsc[, !colnames(leading_edge_hsc) %in% c("mock")]
+leading_edge_hsc <- as.matrix(leading_edge_hsc)
+# remove genes where all expression values are 0 across all columns
+leading_edge_hsc <- leading_edge_hsc[rowSums(leading_edge_hsc != 0) > 0, ]
+
+# Create a metadata frame to hold timepoints and KEGG categories for the genes
+gene_metadata <- leading_edges %>% 
+  filter(`cell type` == "HSC") %>%
+  select('0dpa', '1dpa', '2dpa', '3dpa', '4dpa', '7dpa', 'category') %>%
+  gather(key = "timepoint", value = "gene", -category) %>%
+  filter(gene %in% rownames(leading_edge_hsc)) %>%
+  distinct(gene, category, .keep_all = TRUE)
+
+# Create a new data frame that matches the order of genes
+ordered_gene_metadata <- gene_metadata %>%
+  filter(gene %in% rownames(leading_edge_hsc)) %>%
+  arrange(match(gene, rownames(leading_edge_hsc))) %>%
+  select(gene, category)
+
+# Set the gene column as the row names
+ordered_gene_metadata <- as.data.frame(ordered_gene_metadata)
+rownames(ordered_gene_metadata) <- ordered_gene_metadata$gene
+ordered_gene_metadata <- ordered_gene_metadata %>% select(-gene)
+
+annotation_colors <- list(
+  category = c("collagens" = "#f4f1de", 
+               "ecm affiliated proteins" = "#eab69f",
+               "ecm glycoproteins" = "#e07a5f", 
+               "ecm regulators" = "#3d405b",
+               "proteoglycans" = "#81b29a", 
+               "secreted factors" = "#f2cc8f")
+)
+
+ha <- HeatmapAnnotation(category = ordered_gene_metadata$category,
+                        which = 'row',
+                        col = annotation_colors)
+
+timepoint_split <- gene_metadata %>%
+  filter(gene %in% rownames(leading_edge_hsc)) %>%
+  arrange(match(gene, rownames(leading_edge_hsc))) %>%
+  pull(timepoint)
+
+# Z-score normalize the matrix by row (genes)
+leading_edge_hsc_zscored <- t(scale(t(leading_edge_hsc)))
+
+# Generate heatmap with annotations
+Heatmap(leading_edge_hsc_zscored, right_annotation = ha, 
+        cluster_columns = FALSE, cluster_rows = TRUE,
+        rect_gp = gpar(col = "white", lwd = 2),
+        column_title = "Leading Edge Matrisome Genes Per Pathway In HSCs",
+        heatmap_legend_param = list(
+          title = gt_render("<span style='color:black'>**Expression**</span>"), 
+          at = c(-2, 0, 2), 
+          labels = gt_render(c("Low Expression", "No Change", "High Expression"))
+        ))
 
