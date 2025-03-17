@@ -107,14 +107,29 @@ common_pathways_hep <- merged_nes_hep[complete.cases(merged_nes_hep[, -1]), ]
 long_nes_hep <- common_pathways_hep %>%
   pivot_longer(cols = starts_with("hep"), names_to = "Timepoint", values_to = "NES")
 
+# remove the cell name from the timepoint column
+long_nes_hep$Timepoint <- gsub("^[a-zA-Z]+", "", long_nes_hep$Timepoint)
+
 # plot
 ggplot(long_nes_hep, aes(x = Timepoint, y = NES, color = Pathway, group = Pathway)) +
-  geom_line() +
-  geom_point() +
-  labs(title = "NES Over Regeneration In Hepatocytes for Matrisome Gene Sets", 
-       x = "Timepoint (dpa)", y = "Normalized Enrichment Score (NES)") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme_minimal()
+  geom_line(size = 1.0) + 
+  geom_point(size = 1.5) +   
+  scale_color_brewer(palette = "Set2") +  
+  labs(title = "NES Over Liver Regeneration in Hepatocytes for Matrisome Gene Sets", 
+       x = "Timepoint (dpa)", 
+       y = "Normalized Enrichment Score \n (NES)", 
+       color = "Category") +
+  theme_light(base_size = 12) +  # Cleaner theme with larger text
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12, color = "black"), # Rotated x-axis labels
+    axis.text.y = element_text(size = 12, color = "black"), 
+    axis.title = element_text(size = 12, face = "bold"), 
+    plot.title = element_text(size = 12, face = "bold", hjust = 0.5), # Centered title
+    legend.position = "right", 
+    legend.text = element_text(size = 10),
+    legend.title = element_text(size = 12, face = "bold"),
+    panel.border = element_rect(color = "black", fill = NA, size = 1.2)  # Thicker border
+  )
 
 # ----------------- run on HSCs ------------------ #
 HSC0dpa_ranked <- prepare_ranked_list(HSC.0)
@@ -153,14 +168,29 @@ common_pathways_HSC <- merged_nes_HSC[complete.cases(merged_nes_HSC[, -1]), ]
 long_nes_HSC <- common_pathways_HSC %>%
   pivot_longer(cols = starts_with("HSC"), names_to = "Timepoint", values_to = "NES")
 
+# remove the cell name from the timepoint column
+long_nes_HSC$Timepoint <- gsub("^[a-zA-Z]+", "", long_nes_HSC$Timepoint)
+
 # plot
 ggplot(long_nes_HSC, aes(x = Timepoint, y = NES, color = Pathway, group = Pathway)) +
-  geom_line() +
-  geom_point() +
-  labs(title = "NES Over Regeneration In HSCs for Matrisome Gene Sets", 
-       x = "Timepoint (dpa)", y = "Normalized Enrichment Score (NES)") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme_minimal()
+  geom_line(size = 1.0) + 
+  geom_point(size = 1.5) +   
+  scale_color_brewer(palette = "Set2") +  
+  labs(title = "NES Over Liver Regeneration in HSCs for Matrisome Gene Sets", 
+       x = "Timepoint (dpa)", 
+       y = "Normalized Enrichment Score \n (NES)", 
+       color = "Category") +
+  theme_light(base_size = 12) +  # Cleaner theme with larger text
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12, color = "black"), # Rotated x-axis labels
+    axis.text.y = element_text(size = 12, color = "black"), 
+    axis.title = element_text(size = 12, face = "bold"), 
+    plot.title = element_text(size = 12, face = "bold", hjust = 0.5), # Centered title
+    legend.position = "right", 
+    legend.text = element_text(size = 10),
+    legend.title = element_text(size = 12, face = "bold"),
+    panel.border = element_rect(color = "black", fill = NA, size = 1.2)  # Thicker border
+  )
 
 # ----------------- run on endothelial cells ------------------ #
 end0dpa_ranked <- prepare_ranked_list(end.0)
@@ -199,14 +229,29 @@ common_pathways_end <- merged_nes_end[complete.cases(merged_nes_end[, -1]), ]
 long_nes_end <- common_pathways_end %>%
   pivot_longer(cols = starts_with("end"), names_to = "Timepoint", values_to = "NES")
 
+# remove the cell name from the timepoint column
+long_nes_end$Timepoint <- gsub("^[a-zA-Z]+", "", long_nes_end$Timepoint)
+
 # plot
 ggplot(long_nes_end, aes(x = Timepoint, y = NES, color = Pathway, group = Pathway)) +
-  geom_line() +
-  geom_point() +
-  labs(title = "NES Over Regeneration In Endothelial Cells for Matrisome Gene Sets", 
-       x = "Timepoint (dpa)", y = "Normalized Enrichment Score (NES)") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme_minimal()
+  geom_line(size = 1.0) + 
+  geom_point(size = 1.5) +   
+  scale_color_brewer(palette = "Set2") +  
+  labs(title = "NES Over Liver Regeneration in Endothelial Cells for Matrisome Gene Sets", 
+       x = "Timepoint (dpa)", 
+       y = "Normalized Enrichment Score \n (NES)", 
+       color = "Category") +
+  theme_light(base_size = 12) +  # Cleaner theme with larger text
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12, color = "black"), # Rotated x-axis labels
+    axis.text.y = element_text(size = 12, color = "black"), 
+    axis.title = element_text(size = 12, face = "bold"), 
+    plot.title = element_text(size = 12, face = "bold", hjust = 0.5), # Centered title
+    legend.position = "right", 
+    legend.text = element_text(size = 10),
+    legend.title = element_text(size = 12, face = "bold"),
+    panel.border = element_rect(color = "black", fill = NA, size = 1.2)  # Thicker border
+  )
 
 # ------------------------- creating a plot of ALL cell types-------------------------- #
 long_nes_HSC$CellType <- "HSC"
@@ -220,30 +265,41 @@ long_nes_all <- bind_rows(long_nes_HSC, long_nes_end, long_nes_hep)
 long_nes_all$Timepoint <- gsub("^[a-zA-Z]+", "", long_nes_all$Timepoint)
 
 ggplot(long_nes_all, aes(x = Timepoint, y = NES, color = CellType, group = CellType)) +
-  geom_line(size = 1) +  
-  geom_point(size = 1.2) +   
+  geom_line(size = 1.2) +  
+  geom_point(size = 2) +   
   scale_color_manual(values = c("Hepatocyte" = "#011a51", 
                                 "Endothelial" = "#fab129", 
                                 "HSC" = "#f06c00")) + 
-  labs(title = "NES Over Regeneration for Matrisome Gene Sets Across Cell Types", 
+  labs(title = "NES Over Liver Regeneration for Matrisome Gene Sets Across Cell Types", 
        x = "Timepoint (dpa)", 
-       y = "Normalized Enrichment Score (NES)", 
+       y = "Normalized Enrichment Score \n (NES)", 
        color = "Cell Type") +
-  theme_minimal(base_size = 14) +  # Increase base font size for readability
+  theme_minimal(base_size = 12) +  # Increase base font size for readability
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 12, color = "black"), # Rotate x-axis labels
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10, color = "black"), # Rotate x-axis labels
     axis.text.y = element_text(size = 12, color = "black"), 
     axis.title = element_text(size = 12, face = "bold"), 
     plot.title = element_text(size = 12, face = "bold", hjust = 0.5), # Centered title
     legend.position = "right", 
     legend.text = element_text(size = 12),
-    panel.grid = element_blank(),  # Remove grid lines
     panel.border = element_rect(color = "black", fill = NA, size = 1)  # Add a box around the plot
   )
 
 # -------------------- create the heatmap --------------------- #
 # read in the file containing leading gene edge info for each cell type
 leading_edges <- read_csv('/Users/sm2949/Desktop/2019SingleCell_leadingEdgeGenes.csv')
+
+leading_edges <- leading_edges %>%
+  mutate(category = case_when(
+    category == "collagens" ~ "Collagens",
+    category == "ecm affiliated proteins" ~ "ECM-affiliated proteins",
+    category == "ecm glycoproteins" ~ "ECM glycoproteins",
+    category == "ecm regulators" ~ "ECM regulators",
+    category == "proteoglycans" ~ "Proteoglycans",
+    category == "secreted factors" ~ "Secreted factors",
+    TRUE ~ category # Keep other values unchanged
+  )) %>%
+  rename(Category = category)
 
 # NOTE: THIS SECTION IS FOR HEPATOCYTES 
 # extract the genes for each timepoint
@@ -320,16 +376,16 @@ leading_edge_hep <- as.matrix(leading_edge_hep)
 # Create a metadata frame to hold timepoints and KEGG categories for the genes
 gene_metadata <- leading_edges %>% 
   filter(`cell type` == "hepatocytes") %>%
-  select('0dpa', '1dpa', '2dpa', '3dpa', '4dpa', '7dpa', 'category') %>%
-  gather(key = "timepoint", value = "gene", -category) %>%
+  select('0dpa', '1dpa', '2dpa', '3dpa', '4dpa', '7dpa', 'Category') %>%
+  gather(key = "timepoint", value = "gene", -Category) %>%
   filter(gene %in% rownames(leading_edge_hep)) %>%
-  distinct(gene, category, .keep_all = TRUE)
+  distinct(gene, Category, .keep_all = TRUE)
 
 # Create a new data frame that matches the order of genes in `leading_edge_hep`
 ordered_gene_metadata <- gene_metadata %>%
   filter(gene %in% rownames(leading_edge_hep)) %>%
   arrange(match(gene, rownames(leading_edge_hep))) %>%
-  select(gene, category)
+  select(gene, Category)
 
 # Set the gene column as the row names
 ordered_gene_metadata <- as.data.frame(ordered_gene_metadata)
@@ -337,15 +393,15 @@ rownames(ordered_gene_metadata) <- ordered_gene_metadata$gene
 ordered_gene_metadata <- ordered_gene_metadata %>% select(-gene)
 
 annotation_colors <- list(
-  category = c("collagens" = "#f4f1de", 
-               "ecm affiliated proteins" = "#eab69f",
-               "ecm glycoproteins" = "#e07a5f", 
-               "ecm regulators" = "#3d405b",
-               "proteoglycans" = "#81b29a", 
-               "secreted factors" = "#f2cc8f")
+  Category = c("Collagens" = "#f4f1de", 
+               "ECM-affiliated proteins" = "#eab69f",
+               "ECM glycoproteins" = "#e07a5f", 
+               "ECM regulators" = "#3d405b",
+               "Proteoglycans" = "#81b29a", 
+               "Secreted factors" = "#f2cc8f")
 )
 
-ha <- HeatmapAnnotation(category = ordered_gene_metadata$category,
+ha <- HeatmapAnnotation(Category = ordered_gene_metadata$Category,
                         which = 'row',
                         col = annotation_colors)
 
